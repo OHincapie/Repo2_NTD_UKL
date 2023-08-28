@@ -1,10 +1,11 @@
 let pagina = 1;
-
+let numeroCita = localStorage.getItem('ultimaCita') ? localStorage.getItem('ultimaCita') : 0;
 const cita = {
-    nombre:'',
-    fecha:'',
-    hora:'',
-    servicios:[]
+    nombre: '',
+    fecha: '',
+    hora: '',
+    servicios: [],
+    totalServicio: 0
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -156,9 +157,9 @@ function seleccionarServicio(e) {
     } else {
         elemento.classList.add('seleccionado')
         const serviciosObj = {
-            id : parseInt(elemento.dataset.idServicio),
-            nombre : elemento.firstElementChild.textContent,
-            precio : elemento.firstElementChild.nextElementSibling.textContent
+            id: parseInt(elemento.dataset.idServicio),
+            nombre: elemento.firstElementChild.textContent,
+            precio: elemento.firstElementChild.nextElementSibling.textContent
         }
 
         agregarServicio(serviciosObj);
@@ -196,10 +197,21 @@ function btnSiguiente() {
     })
 }
 
+function btnFinalizar(citaFinalizada) {
+    const finalizar = document.querySelector('#finalizar');
+    finalizar.addEventListener('click', function () {
+        const userDataJSON = JSON.stringify(citaFinalizada);
+        localStorage.setItem('ultimaCita', numeroCita);
+        localStorage.setItem(`cita${numeroCita}`, userDataJSON);
+        limpiarDatos();
+    })
+}
+
 function btnPaginador() {
     const anterior = document.querySelector('#anterior');
     const siguiente = document.querySelector('#siguiente');
-
+    const finalizar = document.querySelector('#finalizar');
+    finalizar.classList.add('oculto');
     if (pagina === 1) {
         anterior.classList.add('oculto');
         siguiente.classList.remove('oculto');
@@ -207,8 +219,9 @@ function btnPaginador() {
         anterior.classList.remove('oculto');
         siguiente.classList.remove('oculto');
     } else if (pagina === 3) {
-        anterior.classList.remove('oculto')
+        anterior.classList.remove('oculto');
         siguiente.classList.add('oculto');
+        finalizar.classList.remove('oculto');
         mostrarResumen();
     }
     mostrarSeccion();
@@ -280,11 +293,11 @@ function mostrarResumen() {
 
         const nombreServicio = document.createElement('P');
         const precioServicio = document.createElement('P');
-        precioServicio.classList.add('precio'); 
+        precioServicio.classList.add('precio');
 
         const totalServicio = precio.split('$');
 
-        cantidad += parseInt(totalServicio[1].trim()) ;
+        cantidad += parseInt(totalServicio[1].trim());
 
 
 
@@ -305,11 +318,13 @@ function mostrarResumen() {
     resumenTodo.appendChild(resumenServicios);
 
     const cantidadPagar = document.createElement('P');
-        cantidadPagar.classList.add('total');
-        cantidadPagar.innerHTML = `<span>Total a pagar: </span> $ ${cantidad}`;
+    cantidadPagar.classList.add('total');
+    cantidadPagar.innerHTML = `<span>Total a pagar: </span> $ ${cantidad}`;
 
-        resumenTodo.appendChild(cantidadPagar);
-
+    resumenTodo.appendChild(cantidadPagar);
+    numeroCita++;
+    cita.totalServicio = cantidad;
+    btnFinalizar(cita);
 
 }
 
@@ -358,7 +373,7 @@ function mostrarAlerta(mensaje, tipo) {
         alert.remove();
     }, 3500);
 
-    
+
     console.log(alert);
 }
 
@@ -413,4 +428,28 @@ function horaCita() {
             console.log(cita)
         }
     })
+}
+
+function limpiarDatos() {
+    // Reiniciar los valores en el objeto cita
+    cita.nombre = '';
+    cita.fecha = '';
+    cita.hora = '';
+    cita.servicios = [];
+    cita.totalServicio = 0;
+
+    // Eliminar las clases seleccionado de los elementos
+    const elementosSeleccionados = document.querySelectorAll('.seleccionado');
+    elementosSeleccionados.forEach(elemento => {
+        elemento.classList.remove('seleccionado');
+    });
+
+    // Limpiar el resumen en la página
+    const resumenDiv = document.querySelector('.resumen-cita');
+    resumenDiv.innerHTML = '';
+
+    // Reiniciar la página y la navegación
+    pagina = 1;
+    mostrarSeccion();
+    btnPaginador();
 }
